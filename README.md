@@ -1,4 +1,4 @@
-#Node-red M590E#
+# Node-red M590E
 
 forked from leerlbolton/Node-red_M590E
 
@@ -33,7 +33,7 @@ save your changes and reboot for changes to take effect.
 
 ***********************
 
-##Install The Flow:##
+## Install The Flow:
 
 ```Open FLOW_1.txt```, Select All, Copy
 
@@ -68,7 +68,7 @@ This code uses the default settings on your GSM Module
 
 ***********************
 
-##Serial Settings:##
+## Serial Settings:
 
 ```Serial Port: /dev/ttyAMA0```
 
@@ -91,6 +91,6 @@ Split Input: after timeout of, 500ms
 And Deliver: ascii strings
 
 
-##Then Deploy##
+## Then Deploy
 
 hope this works for you.... took me a few days to get this to work.
