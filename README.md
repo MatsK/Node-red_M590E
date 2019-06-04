@@ -2,13 +2,11 @@
 
 forked from leerlbolton/Node-red_M590E
 
-[Schematic](Wiring.jpg)
-
-![Schematic](https://github.com/MatsK/Node-red_M590E/blob/master/Wiring.jpg "Schematic")
+# YouTube link
 
 <a href="https://www.youtube.com/embed/uU_D1XUPEek"
  target="_blank"><img src="https://i1.ytimg.com/vi/uU_D1XUPEek/hqdefault.jpg" 
-alt="M590E Neoway GSM with Node-Red" width="240" height="180" border="10" /></a>
+alt="M590E Neoway GSM with Node-Red" width="480" height="360" border="10" /></a>
 
 To enable UART on the Raspberry Pi 3 via the GPIO Pins:
 
@@ -100,3 +98,8 @@ And Deliver: ascii strings
 ## Then Deploy
 
 hope this works for you.... took me a few days to get this to work.
+
+
+# Schematic
+
+![Schematic](https://github.com/MatsK/Node-red_M590E/blob/master/Wiring.jpg "Schematic")
