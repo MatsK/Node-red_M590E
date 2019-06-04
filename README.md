@@ -4,6 +4,8 @@ forked from leerlbolton/Node-red_M590E
 
 [Schematic](Wiring.jpg)
 
+![Schematic](https://github.com/MatsK/Node-red_M590E/blob/master/Wiring.jpg "Schematic")
+
 To enable UART on the Raspberry Pi 3 via the GPIO Pins:
 
 **1. Open terminal, log in, then type:**
