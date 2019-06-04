@@ -1,0 +1,185 @@
+[{"id":"f001fa94.f6ac58","type":"serial in","z":"c736b2df.4697d","name":"","serial":"d4241e55.88051","x":160,"y":200,"wires":[["3f7e6b07.7e34a4","b6d25613.5c3818"]]},{"id":"3f7e6b07.7e34a4","type":"function","z":"c736b2df.4697d","name":" GSM M590E","func":"/*
+GSM M590E Function
+
+Writen By: Lee Bolton
+Date: 24/01/2018
+
+This function is using the default settings on your GSM Module
+
+
+*** Serial Settings ***
+
+Connection:
+
+Baud Rate: 115200
+Data Bits: 8
+Parity: None
+Stop Bits: 1
+
+Input:
+
+Split Input: after timeout of, 500ms
+And Deliver: ascii strings
+
+***********************
+
+Replace YOUR_NUMBER_HERE with the phone number you want the text to go to (in international format)
+ie. +447890112233
+so replace the zero at the begining of your destination number with +44 
++44 is the code for United Kingdom
++61 is the code for Australia
++1 United States of America
+etc...
+
+Respond is set to ON so it replys when you send it a message to let you know it has done what you asked
+Debug_Outbound is set to OFF, set to ON if you are having problems.
+*/
+global.set(\"Phone_Number\",\"YOUR_NUMBER_HERE\");
+global.set(\"Respond\",\"ON\");
+global.set(\"Debug_Outbound\",\"OFF\");
+var words = msg.payload.split(\" \");
+var serial_word = words[0].split(\"+\");
+var inbound = serial_word[1];
+
+if (global.get(\"recive_init\") === undefined && inbound ==\"SMSFLAG:\"){
+ //msg = {payload:\"Message :\"+words[2]};
+ //node.send([null,null,msg]);
+ //if (words[2] ==\"1\\r\
+\")
+ //msg = {payload:\"Message \"+words[2]+\" OK\"};
+ // node.send([null,null,msg]);
+ 
+ global.set(\"message\",\"inbound\");
+ global.set(\"recive_init\",\"1\");
+ //code here for reciving text
+ MSG_NO = words[2].split(\"\\r\
+\");
+ msg = {payload:\"AT+CMGR=\"+MSG_NO[0]+\"\\r\"};
+ msg2 = {payload:\"Message Recived\"};
+ return [msg,null,msg2];
+}
+
+if (global.get(\"message\") == \"inbound\" && words[1] == \"\\\"REC\"){
+ msg = {payload:\"Prossesing Message\"};
+ node.send([null,null,msg]);
+ GSM_Validate_Number = global.get(\"Phone_Number\").split(\"+\");
+ GSM_Incoming_Number = words[2].split(\"\\\"\");
+ GSM_Incoming_Command = words[2].split(\"\\\"\");
+ if (GSM_Validate_Number[1] == GSM_Incoming_Number[2]){
+ GSM_Topic = GSM_Incoming_Command[7].split(\"\\r\
+\");
+ GSM_Payload = words[3].split(\"\\r\
+\");
+ msg.topic = GSM_Topic[1];
+ msg.payload = GSM_Payload[0];
+ msg2.payload = \"MQTT:\"+GSM_Topic[1]+\":\"+GSM_Payload[0];
+ node.send([null,msg,msg2]);
+ msg = {payload:\"AT+CMGD=1,4\\r\"};
+ node.send([msg,null,null]);
+ }
+ else{
+ msg = {payload:\"Number Did Not Match\"};
+ node.send([null,null,msg]);
+ msg = {payload:\"Incoming:\"+GSM_Incoming_Number[1]};
+ node.send([null,null,msg]);
+ msg = {payload:\"AT+CMGD=1,4\\r\"};
+ node.send([msg,null,null]);
+ global.set(\"WRONG_NUMBER\",\"YES\");
+ }
+ global.set(\"GSM_Inbound_Compleat\",\"OK\");
+ 
+ return null;
+}
+
+if((global.get(\"message\") == \"outbound\" | global.get(\"message\") === undefined) && global.get(\"send_init\") === undefined){
+ global.set(\"message\",\"outbound\");
+ global.set(\"message_holder\",msg.payload);
+ global.set(\"send_init\",\"1\");
+ msg={payload:\"AT+CMGF=1\\r\"};
+ msg2={payload:\"Sending Message\"};
+ return [msg,null,msg2];
+}
+
+if (global.get(\"message\") == \"outbound\" && global.get(\"send_init\") == \"1\"){
+ var array = msg.payload.split(\"\\r\
+\");
+ var array0 = array[0];
+ var array1 = array[1];
+ var array2 = array[2];
+ 
+ if (global.get(\"Debug_Outbound\") == \"ON\"){
+ debug_ar0 = {payload:\"array0:\"+array0};
+ debug_ar1 = {payload:\"array1:\"+array1};
+ debug_ar2 = {payload:\"array2:\"+array2};
+ node.send([null,null,debug_ar0]);
+ node.send([null,null,debug_ar1]);
+ node.send([null,null,debug_ar2]);
+ }
+ 
+ if (array0 == \"AT+CMGF=1\\r\" && array1 == \"OK\")
+ {
+ var msg = {payload:\"AT+CSCS=\\\"GSM\\\"\\r\"};
+ return msg;
+ }
+ if (array0 == \"AT+CSCS=\\\"GSM\\\"\\r\" && array1 == \"OK\")
+ {
+ msg = {payload:\"AT+CMGS=\\\"\"+global.get(\"Phone_Number\")+\"\\\"\\r\"};
+ return msg;
+ }
+ if (array0 == \"AT+CMGS=\\\"\"+global.get(\"Phone_Number\")+\"\\\"\\r\" && array1 ==\"> \")
+ {
+ msg={payload:global.get(\"message_holder\")+\"\\x1A\"};
+ return msg;
+ }
+ if (array0 === \"\" && array2 == \"OK\")
+ {
+ msg = {payload:global.get(\"message_holder\")+\" Sent OK\"};
+ global.set(\"message\", undefined);
+ global.set(\"send_init\", undefined);
+ return [ null, null, msg];
+ }
+ else if (array0 === \"\" && array1 == \"ERROR\")//set timer to initiate resending of message
+ {
+ msg={payload:\"AT+CMGF=1\\r\"};
+ msg2={payload:\"Retrying To Send Message\"};
+ setTimeout(function(){
+ node.send([msg,null,msg2]);
+ }, 5000);
+ }
+}
+if (global.get(\"GSM_Inbound_Compleat\")==\"OK\"){
+ finalise = words[0].split(\"\\r\
+\");
+ if (finalise[0] == \"AT+CMGD=1,4\\r\" && finalise[1] == \"OK\"){
+ global.set(\"recive_init\",undefined);
+ global.set(\"message\",\"outbound\");
+ global.set(\"GSM_Inbound_Compleat\",undefined);
+ msg = {payload:\"Finished\"};
+ node.send([null,null,msg]);
+ }
+ if (global.get(\"Respond\") == \"ON\" && global.get(\"WRONG_NUMBER\") === undefined){
+ global.set(\"message\",\"outbound\");
+ global.set(\"message_holder\",GSM_Topic[1]+\":\"+GSM_Payload[0]+ \" OK\");
+ global.set(\"send_init\",\"1\");
+ msg={payload:\"AT+CMGF=1\\r\"};
+ msg2={payload:\"Sending Acknowledgement\"};
+ return [msg,null,msg2];
+ }
+ else{
+ global.set(\"WRONG_NUMBER\",undefined);
+ }
+}
+
+","outputs":"3","noerr":0,"x":380,"y":200,"wires":[["299ae9e1.ddb266","9700fe47.4e6cd"],["8ac4ee81.6d531","203e02da.bfa8de"],["67456d97.8d8504"]],"inputLabels":["Serial In"],"outputLabels":["Serial Out","MQTT Out","UI Out"]},{"id":"8ac4ee81.6d531","type":"mqtt out","z":"c736b2df.4697d","name":"","topic":"","qos":"","retain":"","broker":"2b8083fa.5ec8ec","x":570,"y":200,"wires":[]},{"id":"67456d97.8d8504","type":"debug","z":"c736b2df.4697d","name":"console out","active":true,"console":"false","complete":"payload","x":590,"y":300,"wires":[]},{"id":"8194d31c.635e","type":"inject","z":"c736b2df.4697d","name":"","topic":"","payload":"Test Message","payloadType":"str","repeat":"","crontab":"","once":false,"x":150,"y":140,"wires":[["3f7e6b07.7e34a4"]]},{"id":"299ae9e1.ddb266","type":"debug","z":"c736b2df.4697d","name":"","active":false,"console":"false","complete":"false","x":580,"y":100,"wires":[]},{"id":"b6d25613.5c3818","type":"debug","z":"c736b2df.4697d","name":"","active":false,"console":"false","complete":"false","x":170,"y":280,"wires":[]},{"id":"203e02da.bfa8de","type":"debug","z":"c736b2df.4697d","name":"","active":false,"console":"false","complete":"false","x":590,"y":260,"wires":[]},{"id":"c8bcb2c3.a0f79","type":"function","z":"c736b2df.4697d","name":"GSM RESET","func":"//reset inbound
+global.set(\"recive_init\",undefined);
+global.set(\"GSM_Inbound_Compleat\",undefined);
+msg = {payload:\"AT+CMGD=1,4\\r\"};
+node.send(msg);//delete all messages
+
+//reset outbound
+global.set(\"message\", undefined);
+global.set(\"send_init\", undefined);
+return null;","outputs":1,"noerr":0,"x":370,"y":340,"wires":[["9700fe47.4e6cd"]]},{"id":"7876655f.d4bd2c","type":"inject","z":"c736b2df.4697d","name":"RESET","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"x":150,"y":340,"wires":[["c8bcb2c3.a0f79"]]},{"id":"9700fe47.4e6cd","type":"serial out","z":"c736b2df.4697d","name":"","serial":"d4241e55.88051","x":580,"y":140,"wires":[]},{"id":"f9524fbb.4a5f","type":"inject","z":"c736b2df.4697d","name":"Com Check","topic":"","payload":"AT\\r","payloadType":"str","repeat":"","crontab":"","once":false,"x":150,"y":100,"wires":[["a621537b.96eea"]]},{"id":"a621537b.96eea","type":"function","z":"c736b2df.4697d","name":"AT\\r","func":"msg = {payload:\"AT\\r\"};
+return msg;","outputs":1,"noerr":0,"x":310,"y":100,"wires":[["9700fe47.4e6cd"]]},{"id":"8ef855cd.c396d8","type":"function","z":"c736b2df.4697d","name":"\\x1A","func":"msg = {payload:\"\\x1A\"};
+return msg;","outputs":1,"noerr":0,"x":310,"y":60,"wires":[["9700fe47.4e6cd"]]},{"id":"298d258a.41023a","type":"inject","z":"c736b2df.4697d","name":"End Of Message","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"x":140,"y":60,"wires":[["8ef855cd.c396d8"]]},{"id":"d4241e55.88051","type":"serial-port","z":"","serialport":"/dev/ttyS0","serialbaud":"115200","databits":"8","parity":"none","stopbits":"1","newline":"500","bin":"false","out":"time","addchar":false},{"id":"2b8083fa.5ec8ec","type":"mqtt-broker","z":"","broker":"192.168.1.202","port":"1883","clientid":"","usetls":false,"compatmode":true,"keepalive":"60","cleansession":true,"willTopic":"","willQos":"0","willPayload":"","birthTopic":"","birthQos":"0","birthPayload":""}]
+
