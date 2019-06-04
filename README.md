@@ -36,16 +36,17 @@ Install The Flow:
 
 Open Node-Red in your browser and click on the 3 horizontal bars at the top right of the screen.
 Hover your mouse over Import, then click Clipboard.
+
 Paste the code into the window, make sure 'new flow' is selected, then click Import.
 Double click on the function GSM M590E.
+
 Here you will see:
 
-global.set("Phone_Number","YOUR_NUMBER_HERE");
+```global.set("Phone_Number","YOUR_NUMBER_HERE");```
 
-Replace YOUR_NUMBER_HERE with the phone number you want the text to go to.
+Replace ```YOUR_NUMBER_HERE``` with the phone number you want the text to go to.
 
 ie. +447890112233
-
 
 so replace the zero at the begining of your destination number with +44 
 
@@ -63,16 +64,13 @@ This code uses the default settings on your GSM Module
 
 ***********************
 
-Serial Settings:
+**Serial Settings:**
 
+```Serial Port: /dev/ttyAMA0```
 
+**Connection:**
 
-Serial Port: /dev/ttyAMA0
-
-
-Connection:
-
-
+```
 Baud Rate: 115200
 
 Data Bits: 8
@@ -80,11 +78,10 @@ Data Bits: 8
 Parity: None
 
 Stop Bits: 1
+```
 
 
-
-Input:
-
+**Input:**
 
 Split Input: after timeout of, 500ms
 
