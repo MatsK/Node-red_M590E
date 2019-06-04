@@ -1,6 +1,9 @@
-# Node-red M590E
+# M590E Neoway GSM with Node-Red
 
 forked from leerlbolton/Node-red_M590E
+
+Other GSM modules should be compatible, ex SIM800, SIM900 ...
+
 
 # YouTube link
 
