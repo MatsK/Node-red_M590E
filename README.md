@@ -2,25 +2,29 @@ To enable UART on the Raspberry Pi 3 via the GPIO Pins:
 
 1, open terminal, log in, then type:
 
-sudo nano /boot/config.txt
+```sudo nano /boot/config.txt```
 
 Add the line at the bottom:
 
+```
 core_freq=250
 
 enable_uart=1
+```
 
 save your changes and reboot for changes to take effect.
 
 2, Disable the Console:
 
+```
 sudo systemctl stop serial-getty@ttyS0.service
 
 sudo systemctl disable serial-getty@ttyS0.service
 
 sudo nano /boot/cmdline.txt
+```
 
-remove the line: console=serial0,115200
+remove the line: ```console=serial0,115200```
 
 save your changes and reboot for changes to take effect.
 
@@ -28,7 +32,7 @@ save your changes and reboot for changes to take effect.
 
 Install The Flow:
 
-Open FLOW_1.txt, Select All, Copy
+```Open FLOW_1.txt```, Select All, Copy
 
 Open Node-Red in your browser and click on the 3 horizontal bars at the top right of the screen.
 Hover your mouse over Import, then click Clipboard.
